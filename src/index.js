@@ -1,11 +1,11 @@
 import SimpleLightbox from "simplelightbox";
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import Notiflix from 'notiflix';
 
 import './css/styles.css';
 import ImagesApiService from './images-service';
 
 
-const DEBOUNCE_DELAY = 300;
 const form = document.querySelector('.search-form');
 const loadMoreBtn = document.querySelector('.load-more');
 const gallery = document.querySelector('.gallery');
@@ -13,35 +13,57 @@ const gallery = document.querySelector('.gallery');
 const imagesApiService = new ImagesApiService();
  
 form.addEventListener('submit', onSearch)
-loadMoreBtn.addEventListener('click', fetchImages);
+loadMoreBtn.addEventListener('click', onLoadMoreClick);
 gallery.addEventListener('click', onImageClick);
 
-loadMoreBtn.disabled = true;
+loadMoreBtn.classList.add("visually-hidden");
 
 function onSearch(event) {
     event.preventDefault();
-
+   
     imagesApiService.query = event.currentTarget.elements.searchQuery.value;
-    // console.log(searchName);
+  
+     
     clearContainer();
     imagesApiService.resetPage();
-    fetchImages();  
+    fetchMoreImages();  
 }
 
 
-function fetchImages() {
-   imagesApiService.fetchImages().then(hits => {
+function fetchMoreImages() {
+    loadMoreBtn.classList.remove("visually-hidden");
+    imagesApiService.fetchImages().then(hits => {
+        // console.log(hits);
+        if (hits.length === 0) {
+          loadMoreBtn.classList.add("visually-hidden");
+          Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again!')
+          return
+        }; 
        loadMoreBtn.disabled = true;
        imagesMarkup(hits);
-    loadMoreBtn.disabled = false;
+        loadMoreBtn.disabled = false;
+        console.log(hits.length);
+       
     } ); 
 }
 
-function onError(hits) {
-    if (hits === []) {
-return console.log('Sorry');
-    }
+function onLoadMoreClick() {
+    if (imagesApiService.page === 13) {
+        const message = `<p class = "message"> <b> We're sorry, but you've reached the end of search results. </b></p>`
+        Notiflix.Notify.success('Hooray! We found totalHits images.');
+        
+        fetchMoreImages();
+        
+        gallery.insertAdjacentHTML('afterend', message);
+
+        loadMoreBtn.classList.add("visually-hidden");
+        return;
+    };
+    // console.log(imagesApiService.page);
+    fetchMoreImages();
+     gallery.refresh();
 }
+
 
 
 function imagesMarkup(hits) {
@@ -66,7 +88,7 @@ function imagesMarkup(hits) {
     </p>
   </div>
 </div>`).join('');
-    console.log(imagesMarkup);
+    // console.log(imagesMarkup);
     gallery.insertAdjacentHTML('beforeend', imagesMarkup);
 }
 
@@ -81,7 +103,7 @@ function onImageClick(event) {
         return;
     }
 
-    console.log(event.target.nodeName);
+    // console.log(event.target.nodeName);
     const modal = new SimpleLightbox('.gallery a', {
         captionsData: 'alt',
         overlay: true
