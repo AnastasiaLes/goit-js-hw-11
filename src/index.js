@@ -9,6 +9,7 @@ import ImagesApiService from './images-service';
 const form = document.querySelector('.search-form');
 const loadMoreBtn = document.querySelector('.load-more');
 const gallery = document.querySelector('.gallery');
+const endMessage = document.querySelector('.message');
 
 const imagesApiService = new ImagesApiService();
  
@@ -32,6 +33,7 @@ function onSearch(event) {
 
 function fetchMoreImages() {
     loadMoreBtn.classList.remove("visually-hidden");
+    loadMoreBtn.disabled = true;
     imagesApiService.fetchImages().then(hits => {
         // console.log(hits);
         if (hits.length === 0) {
@@ -39,22 +41,22 @@ function fetchMoreImages() {
           Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again!')
           return
         }; 
-       loadMoreBtn.disabled = true;
+       
        imagesMarkup(hits);
         loadMoreBtn.disabled = false;
-        console.log(hits.length);
+        // console.log(hits.length);
        
     } ); 
 }
 
 function onLoadMoreClick() {
     if (imagesApiService.page === 13) {
-        const message = `<p class = "message"> <b> We're sorry, but you've reached the end of search results. </b></p>`
+        const message = `<p> <b> We're sorry, but you've reached the end of search results. </b></p>`
         Notiflix.Notify.success('Hooray! We found totalHits images.');
         
         fetchMoreImages();
         
-        gallery.insertAdjacentHTML('afterend', message);
+        endMessage.insertAdjacentHTML('beforeend', message);
 
         loadMoreBtn.classList.add("visually-hidden");
         return;
@@ -94,6 +96,7 @@ function imagesMarkup(hits) {
 
 function clearContainer() {
     gallery.innerHTML = '';
+    endMessage.innerHTML = '';
 }
 
 function onImageClick(event) {
