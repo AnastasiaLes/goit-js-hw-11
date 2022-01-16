@@ -61,7 +61,7 @@ function onLoadMoreClick() {
     };
     // console.log(imagesApiService.page);
     fetchMoreImages();
-     gallery.refresh();
+    
 }
 
 
